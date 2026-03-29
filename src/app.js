@@ -1,25 +1,18 @@
 const express = require("express");
+const { adminAuth } = require("./middlewares/auth");
 
 const app = express();
 
-app.get("/user", (req, res) => {
-  res.json({ name: "John Doe", age: 30 });
+// Middleware for the admin routes to check for authorization
+app.use("/admin", adminAuth);
+
+app.get("/admin/getAllUsers", (req, res) => {
+  res.send("List of all users");
 });
 
-app.post("/user", (req, res) => {
-  res.json({ message: "User created successfully" });
-});
-
-app.patch("/user/:id", (req, res) => {
-  res.json({ message: `User with id ${req.params.id} updated successfully` });
-});
-
-app.put("/user/:id", (req, res) => {
-  res.json({ message: `User with id ${req.params.id} updated successfully` });
-});
-
-app.delete("/user/:id", (req, res) => {
-  res.json({ message: `User with id ${req.params.id} deleted successfully` });
+app.delete("/admin/deleteUser/:id", (req, res) => {
+  const userId = req.params.id;
+  res.send(`User with ID ${userId} has been deleted`);
 });
 
 app.listen(3000, () => {
