@@ -8,4 +8,4 @@ const adminAuthMiddleware = (req, res, next) => {
   }
 };
 
-module.exports = adminAuthMiddleware;
+module.exports = { adminAuthMiddleware };
