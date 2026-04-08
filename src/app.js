@@ -11,16 +11,7 @@ app.use(express.json());
 app.use("/admin", adminAuthMiddleware);
 
 app.post("/signup", async (req, res) => {
-  // Handle user signup logic here
-  const newUser = new User({
-    firstName: "Shlok",
-    lastName: "Rastogi",
-    email: "shlok@gmail.com",
-    password: "password123",
-    age: 20,
-    gender: "Male",
-  });
-
+  const newUser = new User(req.body);
   try {
     const savedUser = await newUser.save();
     res
@@ -30,6 +21,34 @@ app.post("/signup", async (req, res) => {
     res
       .status(500)
       .json({ message: "Error creating user", error: error.message });
+  }
+});
+
+// Get user by email
+app.get("/user", async (req, res) => {
+  const emailId = req.body.email;
+  try {
+    const user = await User.findOne({ email: emailId });
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+    res.status(200).send(user);
+  } catch (error) {
+    res
+      .status(500)
+      .json({ message: "Error fetching user", error: error.message });
+  }
+});
+
+// Get the feed
+app.get("/feed", async (req, res) => {
+  try {
+    const users = await User.find();
+    res.status(200).send(users);
+  } catch (error) {
+    res
+      .status(500)
+      .json({ message: "Error fetching feed", error: error.message });
   }
 });
 
