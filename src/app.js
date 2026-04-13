@@ -91,7 +91,10 @@ app.patch("/user", async (req, res) => {
     if (!userId) {
       return res.status(400).json({ message: "User ID is required" });
     }
-    const updatedUser = await User.findByIdAndUpdate({ _id: userId }, data);
+    const updatedUser = await User.findByIdAndUpdate(userId, req.body, {
+      new: true,
+      runValidators: true,
+    });
 
     // If user not found
     if (!updatedUser) {
