@@ -57,16 +57,13 @@ app.post("/login", async (req, res) => {
   }
 
   // Check if the provided password matches the hashed password
-  const isMatch = await bcrypt.compare(password, user.password);
-  if (!isMatch) {
+  const isPasswordValid = await bcrypt.compare(password, user.password);
+  if (!isPasswordValid) {
     return res.status(400).json({ message: "Invalid email or password" });
   }
 
-  // Create a JWT token for the authenticated user
-  const token = await jwt.sign({ _id: user._id }, "SecretKey@159", {
-    expiresIn: "1d",
-    httpOnly: true,
-  });
+  // Get a JWT token for the user
+  const token = await user.getJWT();
 
   // Add the token to the cookie and send back to the user
   res.cookie("token", token);
