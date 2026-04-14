@@ -83,8 +83,29 @@ app.delete("/user/:id", async (req, res) => {
 });
 
 // Update a user by Id
-app.patch("/user", async (req, res) => {
-  const userId = req.body.id;
+app.patch("/user/:userId", async (req, res) => {
+  const userId = req.params?.userId;
+  const data = req.body;
+
+  const ALLOWED_UPDATES = [
+    "firstName",
+    "lastName",
+    "password",
+    "age",
+    "gender",
+    "photoUrl",
+    "About",
+    "skills",
+  ];
+  const isUpdateAllowed = Object.keys(data).every((k) => {
+    ALLOWED_UPDATES.includes(k);
+  });
+  if (!isUpdateAllowed) {
+    return res.status(400).json({ message: "Invalid updates" });
+  }
+  if (data?.skills.length > 20) {
+    throw new Error("Cannot have more than 20 skills");
+  }
 
   try {
     // Validate ID format

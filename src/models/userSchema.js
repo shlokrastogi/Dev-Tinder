@@ -17,8 +17,14 @@ const userSchema = new mongoose.Schema(
       lowercase: true,
       trim: true,
     },
-    password: { type: String, required: true, minlength: 6, maxlength: 128 },
-    age: { type: Number, min: 18, max: 100 },
+    password: {
+      type: String,
+      required: true,
+      minlength: 6,
+      maxlength: 128,
+      trim: true,
+    },
+    age: { type: Number, min: 18, max: 100, trim: true },
     gender: {
       type: String,
       validate(value) {
