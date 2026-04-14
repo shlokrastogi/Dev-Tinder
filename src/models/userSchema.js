@@ -1,4 +1,5 @@
 const mongoose = require("mongoose");
+const validator = require("validator");
 
 const userSchema = new mongoose.Schema(
   {
@@ -16,6 +17,11 @@ const userSchema = new mongoose.Schema(
       unique: true,
       lowercase: true,
       trim: true,
+      validate(value) {
+        if (!validator.isEmail(value)) {
+          throw new Error("Invalid email format");
+        }
+      },
     },
     password: {
       type: String,
@@ -23,6 +29,13 @@ const userSchema = new mongoose.Schema(
       minlength: 6,
       maxlength: 128,
       trim: true,
+      validate(value) {
+        if (!validator.isStrongPassword(value)) {
+          throw new Error(
+            "Enter a stronger password (min 6 chars, with uppercase, lowercase, number, and symbol)",
+          );
+        }
+      },
     },
     age: { type: Number, min: 18, max: 100, trim: true },
     gender: {
@@ -36,6 +49,11 @@ const userSchema = new mongoose.Schema(
     photoUrl: {
       type: String,
       default: "https://www.freepik.com/free-photos-vectors/user-profile",
+      validate(value) {
+        if (!validator.isURL(value)) {
+          throw new Error("Invalid photo URL format");
+        }
+      },
     },
     About: {
       type: String,
