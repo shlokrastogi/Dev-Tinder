@@ -1,16 +1,15 @@
 const express = require("express");
-const { adminAuthMiddleware } = require("./middlewares/auth");
 const connectDB = require("./config/database");
 const User = require("./models/userSchema");
 const { signupValidation } = require("./utils/validate");
 const bcrypt = require("bcrypt");
+const cookieParser = require("cookie-parser");
+const jwt = require("jsonwebtoken");
+const { userAuth } = require("./middlewares/auth");
 
 const app = express();
-
 app.use(express.json());
-
-// Middleware for the admin routes to check for authorization
-app.use("/admin", adminAuthMiddleware);
+app.use(cookieParser());
 
 // Register a new user
 app.post("/signup", async (req, res) => {
@@ -63,8 +62,30 @@ app.post("/login", async (req, res) => {
     return res.status(400).json({ message: "Invalid email or password" });
   }
 
+  // Create a JWT token for the authenticated user
+  const token = await jwt.sign({ _id: user._id }, "SecretKey@159", {
+    expiresIn: "1d",
+    httpOnly: true,
+  });
+
+  // Add the token to the cookie and send back to the user
+  res.cookie("token", token);
+  res.send({ message: "Login successful" });
+
   // If the email and password are valid, return a success response
   res.status(200).json({ message: "Login successful", user });
+});
+
+// Get user's profile
+app.get("/profile", userAuth, async (req, res) => {
+  try {
+    const user = req.user;
+    res.status(200).json({ user });
+  } catch (error) {
+    res
+      .status(500)
+      .json({ message: "Error fetching profile", error: error.message });
+  }
 });
 
 // Get user by email
