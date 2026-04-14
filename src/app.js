@@ -2,6 +2,8 @@ const express = require("express");
 const { adminAuthMiddleware } = require("./middlewares/auth");
 const connectDB = require("./config/database");
 const User = require("./models/userSchema");
+const { signupValidation } = require("./utils/validate");
+const bcrypt = require("bcrypt");
 
 const app = express();
 
@@ -10,7 +12,28 @@ app.use(express.json());
 // Middleware for the admin routes to check for authorization
 app.use("/admin", adminAuthMiddleware);
 
+// Register a new user
 app.post("/signup", async (req, res) => {
+  const { firstName, lastName, email, password } = req.body;
+  // If email already exists, return an error
+
+  const existingUser = await User.findOne({ email });
+  if (existingUser) {
+    return res.status(400).json({ message: "Email already exists" });
+  }
+
+  // Validate the request body using the Signup validation function
+  const validationResult = signupValidation(req);
+  if (validationResult) {
+    return res.status(400).json(validationResult);
+  }
+  // Encrypt the password
+  const saltRounds = 10;
+  const hashedPassword = await bcrypt.hash(password, saltRounds);
+  req.body.password = hashedPassword;
+
+  // Create a new user instance and saving it to the database
+
   const newUser = new User(req.body);
   try {
     const savedUser = await newUser.save();
@@ -24,25 +47,24 @@ app.post("/signup", async (req, res) => {
   }
 });
 
-// Register a new user
-app.post("/user", async (req, res) => {
-  try {
-    const email = req.body.email;
-    const existingUser = await User.findOne({ email });
-    if (existingUser) {
-      return res.status(400).json({ message: "Email already exists" });
-    }
+// Login a user
+app.post("/login", async (req, res) => {
+  const { email, password } = req.body;
 
-    const newUser = new User(req.body);
-    const savedUser = await newUser.save();
-    res
-      .status(201)
-      .json({ message: "User created successfully", user: savedUser });
-  } catch (error) {
-    res
-      .status(500)
-      .json({ message: "Error creating user", error: error.message });
+  // Check if the user with the provided email exists
+  const user = await User.findOne({ email });
+  if (!user) {
+    return res.status(400).json({ message: "Invalid email or password" });
   }
+
+  // Check if the provided password matches the hashed password
+  const isMatch = await bcrypt.compare(password, user.password);
+  if (!isMatch) {
+    return res.status(400).json({ message: "Invalid email or password" });
+  }
+
+  // If the email and password are valid, return a success response
+  res.status(200).json({ message: "Login successful", user });
 });
 
 // Get user by email
