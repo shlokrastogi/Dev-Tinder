@@ -34,4 +34,20 @@ const isValidProfileUpdate = (req) => {
   return isEditAllowed;
 };
 
-module.exports = { signupValidation, isValidProfileUpdate };
+// Password update validation
+const isValidPasswordUpdate = (req) => {
+  const { password } = req.body;
+  if (!password) {
+    return { valid: false, message: "Password is required" };
+  }
+  if (!validator.isStrongPassword(password)) {
+    return { valid: false, message: "Please enter a strong password" };
+  }
+  return { valid: true };
+};
+
+module.exports = {
+  signupValidation,
+  isValidProfileUpdate,
+  isValidPasswordUpdate,
+};
