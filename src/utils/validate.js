@@ -16,4 +16,22 @@ const signupValidation = (req) => {
   }
 };
 
-module.exports = { signupValidation };
+const isValidProfileUpdate = (req) => {
+  const allowedUpdates = [
+    "firstName",
+    "lastName",
+    "age",
+    "gender",
+    "about",
+    "skills",
+    "photoUrl",
+  ];
+
+  const isEditAllowed = Object.keys(req.body).every((field) => {
+    return allowedUpdates.includes(field);
+  });
+
+  return isEditAllowed;
+};
+
+module.exports = { signupValidation, isValidProfileUpdate };
