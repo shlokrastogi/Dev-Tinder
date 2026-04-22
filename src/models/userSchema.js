@@ -57,7 +57,7 @@ const userSchema = new mongoose.Schema(
     },
     photoUrl: {
       type: String,
-      default: "https://www.freepik.com/free-photos-vectors/user-profile",
+      default: "https://img.icons8.com/fluent/1200/user-male-circle.jpg",
       validate(value) {
         if (!validator.isURL(value)) {
           throw new Error("Invalid photo URL format");
