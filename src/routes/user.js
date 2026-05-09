@@ -74,9 +74,9 @@ userRouter.get("/user/feed", userAuth, async (req, res) => {
     const loggedInUser = req.user;
 
     const page = parseInt(req.query.page) || 1;
-    const limit = parseInt(req.query.limit) || 10;
+    let limit = parseInt(req.query.limit) || 10;
     const skip = (page - 1) * limit;
-    limit = Math.min(limit, 50); 
+    limit = Math.min(limit, 50);
 
     // Find all connections accept or recieved by the logged in user
     const connectionRequests = await ConnectionRequestModel.find({
@@ -111,4 +111,4 @@ userRouter.get("/user/feed", userAuth, async (req, res) => {
   }
 });
 
-module.exports = { userRouter };
+module.exports = userRouter;

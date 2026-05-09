@@ -40,9 +40,10 @@ const userSchema = new mongoose.Schema(
         }
       },
     },
-    age: { type: Number, min: 18, max: 100, trim: true },
+    age: { type: Number, min: 18, max: 100, trim: true, default: null },
     gender: {
       type: String,
+      default: null,
       enum: {
         values: ["male", "female", "other"],
         message: `{VALUE} is not a valid gender`,

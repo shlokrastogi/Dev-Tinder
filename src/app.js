@@ -1,3 +1,5 @@
+require("dotenv").config();
+
 const express = require("express");
 const connectDB = require("./config/database");
 const User = require("./models/userSchema");
@@ -21,10 +23,12 @@ app.use(
 const authRouter = require("./routes/authUser");
 const profileRouter = require("./routes/profile");
 const requestRouter = require("./routes/request");
+const userRouter = require("./routes/user");
 
 app.use("/", authRouter);
 app.use("/", profileRouter);
 app.use("/", requestRouter);
+app.use("/", userRouter);
 
 connectDB()
   .then(() => {

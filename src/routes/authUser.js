@@ -67,7 +67,11 @@ authRouter.post("/login", async (req, res) => {
 
   // Add the token to the cookie and send back to the user
   res
-    .cookie("token", token, { httpOnly: true })
+    .cookie("token", token, {
+      httpOnly: true,
+      sameSite: "lax", // ✅ REQUIRED for localhost
+      secure: false, // ❗ MUST be false (you're using HTTP)
+    })
     .status(200)
     .json({ message: "Login successful", user });
 });
