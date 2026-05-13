@@ -1,21 +1,29 @@
 const express = require("express");
 const { userAuth } = require("../middlewares/auth");
 const User = require("../models/userSchema");
-const USER_SAFE_FIELDS =
-  "firstName lastName email photoUrl age gender about skills";
+const USER_SAFE_FIELDS = [
+  "firstName",
+  "lastName",
+  "email",
+  "photoUrl",
+  "age",
+  "gender",
+  "about",
+  "skills",
+];
 const ConnectionRequestModel = require("../models/connectionRequest");
 
 const userRouter = express.Router();
 
-// Get all the pending connections fronm the logged in user
-userRouter.get("/user/requests/recieved", userAuth, async (req, res) => {
+// Get all the pending connections from the logged in user
+userRouter.get("/user/requests/received", userAuth, async (req, res) => {
   try {
     const loggedInUser = req.user;
 
     const connectionRequests = await ConnectionRequestModel.find({
       toUserId: loggedInUser._id,
       status: "interested",
-    }).populate("fromUserId", USER_SAFE_FIELDS.join(" "));
+    }).populate("fromUserId", USER_SAFE_FIELDS);
     //.populate("toUserId", ["firstName", "lastName", "email", "photoUrl"]);
     res.status(200).json({
       message: "Connection requests fetched successfully",
@@ -41,7 +49,7 @@ userRouter.get("/user/connections", userAuth, async (req, res) => {
       ],
     })
       .populate("fromUserId", USER_SAFE_FIELDS)
-      .populate("toUserId", USER_SAFE_FIELDS.join);
+      .populate("toUserId", USER_SAFE_FIELDS);
     //.populate("toUserId", ["firstName", "lastName", "email", "photoUrl"]);
 
     const data = connections.map((row) => {

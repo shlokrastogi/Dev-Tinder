@@ -8,10 +8,10 @@ const authRouter = express.Router();
 // Register a new user
 authRouter.post("/signup", async (req, res) => {
   try {
-    // Step 1: Validate first
+    // Step 1: Validate
     const validationResult = signupValidation(req);
-    if (validationResult) {
-      return res.status(400).json(validationResult);
+    if (!validationResult.valid) {
+      return res.status(400).json({ message: validationResult.message });
     }
 
     const { email, password } = req.body;
@@ -30,11 +30,27 @@ authRouter.post("/signup", async (req, res) => {
     const newUser = new User(req.body);
     const savedUser = await newUser.save();
 
-    res.status(201).json({
-      message: "User created successfully",
-      user: savedUser,
-    });
+    // ✅ FIX: use savedUser (not user)
+    const token = await savedUser.getJWT();
+
+    const userObj = savedUser.toObject();
+    delete userObj.password;
+
+    // ✅ Single response only
+    res
+      .cookie("token", token, {
+        httpOnly: true,
+        sameSite: "lax",
+        secure: false,
+      })
+      .status(201)
+      .json({
+        message: "User created successfully",
+        user: userObj,
+      });
   } catch (error) {
+    console.log("SIGNUP ERROR:", error);
+
     if (error.code === 11000) {
       return res.status(400).json({ message: "Email already exists" });
     }
@@ -48,32 +64,38 @@ authRouter.post("/signup", async (req, res) => {
 
 // Login a user
 authRouter.post("/login", async (req, res) => {
-  const { email, password } = req.body;
+  try {
+    const { email, password } = req.body;
 
-  // Check if the user with the provided email exists
-  const user = await User.findOne({ email });
-  if (!user) {
-    return res.status(400).json({ message: "Invalid email or password" });
+    const user = await User.findOne({ email });
+    if (!user) {
+      return res.status(400).json({ message: "Invalid email or password" });
+    }
+
+    const isPasswordValid = await bcrypt.compare(password, user.password);
+    if (!isPasswordValid) {
+      return res.status(400).json({ message: "Invalid email or password" });
+    }
+
+    const token = await user.getJWT();
+
+    const userObj = user.toObject();
+    delete userObj.password;
+
+    res
+      .cookie("token", token, {
+        httpOnly: true,
+        sameSite: "lax",
+        secure: false,
+      })
+      .status(200)
+      .json({ message: "Login successful", user: userObj });
+  } catch (error) {
+    res.status(500).json({
+      message: "Login failed",
+      error: error.message,
+    });
   }
-
-  // Check if the provided password matches the hashed password
-  const isPasswordValid = await bcrypt.compare(password, user.password);
-  if (!isPasswordValid) {
-    return res.status(400).json({ message: "Invalid email or password" });
-  }
-
-  // Get a JWT token for the user
-  const token = await user.getJWT();
-
-  // Add the token to the cookie and send back to the user
-  res
-    .cookie("token", token, {
-      httpOnly: true,
-      sameSite: "lax", // ✅ REQUIRED for localhost
-      secure: false, // ❗ MUST be false (you're using HTTP)
-    })
-    .status(200)
-    .json({ message: "Login successful", user });
 });
 
 //Logout a user

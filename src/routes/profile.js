@@ -7,7 +7,7 @@ const {
 } = require("../utils/validate");
 const bcrypt = require("bcrypt");
 
-const profileRouter = express();
+const profileRouter = express.Router();
 
 // Get user's profile
 profileRouter.get("/profile/view", userAuth, async (req, res) => {
@@ -29,20 +29,55 @@ profileRouter.patch("/profile/update", userAuth, async (req, res) => {
     }
 
     const loggedInUser = req.user;
+    const updates = { ...req.body };
 
-    Object.keys(req.body).forEach((key) => {
-      loggedInUser[key] = req.body[key];
+    // 🔥 Normalize data
+
+    // skills → array
+    if (updates.skills && typeof updates.skills === "string") {
+      updates.skills = updates.skills
+        .split(",")
+        .map((s) => s.trim())
+        .filter(Boolean);
+    }
+
+    // gender → lowercase
+    if (updates.gender) {
+      if (req.body.gender === "") {
+        req.body.gender = null;
+      } else {
+        updates.gender = updates.gender.toLowerCase();
+      }
+    }
+
+    // age → number
+    if (updates.age) {
+      updates.age = Number(updates.age);
+    }
+
+    // photoUrl → remove empty string
+    if (updates.photoUrl === "") {
+      updates.photoUrl = undefined;
+    }
+
+    // Apply updates safely
+    Object.keys(updates).forEach((key) => {
+      loggedInUser[key] = updates[key];
     });
 
     await loggedInUser.save();
 
-    res
-      .status(200)
-      .json({ message: "Profile updated successfully", user: loggedInUser });
+    res.status(200).json({
+      message: "Profile updated successfully",
+      user: loggedInUser,
+    });
   } catch (error) {
-    res
-      .status(500)
-      .json({ message: "Error updating profile", error: error.message });
+    console.log("PROFILE UPDATE ERROR:", error); // 👈 MUST SEE THIS
+
+    res.status(500).json({
+      message: "Error updating profile",
+      error: error.message,
+    });
   }
 });
 
@@ -65,6 +100,10 @@ profileRouter.patch("/profile/password", userAuth, async (req, res) => {
 
     res.status(200).json({ message: "Password updated successfully" });
   } catch (error) {
+    console.log("PROFILE UPDATE ERROR FULL:", error);
+    console.log("ERROR MESSAGE:", error.message);
+    console.log("ERROR NAME:", error.name);
+
     res.status(500).json({
       message: "Error updating password",
       error: error.message,
